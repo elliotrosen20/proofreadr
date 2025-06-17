@@ -5,23 +5,31 @@ import { Badge } from "@/components/ui/badge"
 import { SuggestionItem } from "./SuggestionItem"
 import { CheckCircle, X } from "lucide-react"
 import { useState } from "react"
-import type { Document } from "@/types"
+import type { Suggestion } from "@/types"
 
 interface SuggestionDrawerProps {
-  document: Document
+  suggestions: Suggestion[]
+  documentId: string
   selectedSuggestionId: string | null
   onSuggestionSelect: (id: string | null) => void
+  onSuggestionApplied?: () => Promise<void>
+  isGeneratingSuggestions?: boolean
+  isUserTyping?: boolean
 }
 
 export function SuggestionDrawer({ 
-  document, 
+  suggestions,
+  documentId,
   selectedSuggestionId, 
-  onSuggestionSelect 
+  onSuggestionSelect,
+  onSuggestionApplied,
+  isGeneratingSuggestions = false,
+  isUserTyping = false
 }: SuggestionDrawerProps) {
   const [expandedSuggestionId, setExpandedSuggestionId] = useState<string | null>(null)
 
-  const pendingSuggestions = document.suggestions.filter(s => s.status === "pending")
-  const completedCount = document.suggestions.filter(s => s.status === "accepted").length
+  const pendingSuggestions = suggestions.filter(s => s.status === "pending")
+  const completedCount = suggestions.filter(s => s.status === "accepted").length
 
   const handleSuggestionExpand = (suggestionId: string) => {
     const newExpandedId = expandedSuggestionId === suggestionId ? null : suggestionId
@@ -38,14 +46,31 @@ export function SuggestionDrawer({
           <X className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" />
         </div>
         
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="bg-red-100 text-red-800">
-            {pendingSuggestions.length} to review
-          </Badge>
-          {completedCount > 0 && (
-            <div className="flex items-center gap-1 text-green-600 text-sm">
-              <CheckCircle className="w-4 h-4" />
-              {completedCount} completed
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="bg-red-100 text-red-800">
+              {pendingSuggestions.length} to review
+            </Badge>
+            {completedCount > 0 && (
+              <div className="flex items-center gap-1 text-green-600 text-sm">
+                <CheckCircle className="w-4 h-4" />
+                {completedCount} completed
+              </div>
+            )}
+          </div>
+          
+          {/* Enhanced loading states */}
+          {isUserTyping && !isGeneratingSuggestions && (
+            <div className="flex items-center gap-1 text-gray-500 text-sm">
+              <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+              ✏️ Keep typing... AI will analyze when you pause
+            </div>
+          )}
+          
+          {isGeneratingSuggestions && (
+            <div className="flex items-center gap-1 text-blue-600 text-sm font-medium">
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              🤖 AI analyzing your text...
             </div>
           )}
         </div>
@@ -65,7 +90,7 @@ export function SuggestionDrawer({
               <SuggestionItem
                 key={suggestion.id}
                 suggestion={suggestion}
-                docId={document.id}
+                docId={documentId}
                 isHighlighted={selectedSuggestionId === suggestion.id}
                 isExpanded={expandedSuggestionId === suggestion.id}
                 onExpand={() => handleSuggestionExpand(suggestion.id)}
@@ -76,6 +101,7 @@ export function SuggestionDrawer({
                     onSuggestionSelect(null)
                   }
                 }}
+                onSuggestionApplied={onSuggestionApplied}
               />
             ))}
           </div>

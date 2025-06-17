@@ -15,6 +15,9 @@ CLERK_SECRET_KEY="sk_test_your_secret_key_here"
 NEXT_PUBLIC_CLERK_SIGN_IN_URL="/login"
 NEXT_PUBLIC_CLERK_SIGN_UP_URL="/signup"
 
+# OpenAI (Required for AI-powered spellcheck and style suggestions)
+OPENAI_API_KEY="sk-your_openai_api_key_here"
+
 # Stripe (Disabled - billing functionality removed)
 # STRIPE_SECRET_KEY="sk_test_your_stripe_secret_key_here"
 # STRIPE_WEBHOOK_SECRET="whsec_your_webhook_secret_here"
@@ -46,6 +49,12 @@ NEXT_PUBLIC_CLERK_SIGN_UP_URL="/signup"
 2. Create account/project
 3. Copy keys from dashboard
 
+### OpenAI (AI Spellcheck)
+1. Go to [platform.openai.com](https://platform.openai.com)
+2. Create account and add billing method
+3. Generate API key from "API Keys" section
+4. Add key to your `.env.local` file
+
 ### Supabase (Database)
 1. Go to [supabase.com](https://supabase.com)
 2. Create project
@@ -60,12 +69,14 @@ Re-enable in `/lib/stripe.ts` and `/actions/stripe.ts` if needed.
 ✅ **Without Database:**
 - User interface
 - Editor functionality
-- Mock suggestions
+- Mock suggestions (fallback)
 - All UI components
 
-✅ **With Database:**
+✅ **With Database + OpenAI:**
 - Document persistence
 - User-owned documents
+- AI-powered spellcheck suggestions
+- AI-powered style suggestions
 - Real suggestions storage
 - Full authentication
 

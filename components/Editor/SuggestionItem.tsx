@@ -14,6 +14,7 @@ interface SuggestionItemProps {
   isHighlighted?: boolean
   isExpanded: boolean
   onExpand: () => void
+  onSuggestionApplied?: () => Promise<void>
 }
 
 export function SuggestionItem({
@@ -23,14 +24,30 @@ export function SuggestionItem({
   isHighlighted = false,
   isExpanded,
   onExpand,
+  onSuggestionApplied,
 }: SuggestionItemProps) {
 
   const handleAccept = async () => {
+    console.log("✅ Accepting suggestion:", suggestion.originalText, "->", suggestion.suggestedText)
     try {
       await applySuggestion(docId, suggestion.id)
-      window.location.reload() // Simple reload for now
+      console.log("✅ Database updated, now refreshing UI...")
+      
+      if (onSuggestionApplied) {
+        console.log("🔄 Calling onSuggestionApplied callback...")
+        await onSuggestionApplied()
+        console.log("✅ onSuggestionApplied callback completed")
+      } else {
+        console.warn("❌ No onSuggestionApplied callback provided!")
+        // Fallback: force page refresh if callback isn't working
+        window.location.reload()
+      }
     } catch (error) {
-      console.error("Error accepting suggestion:", error)
+      console.error("❌ Error accepting suggestion:", error)
+      // If there's an error (like suggestion not found), still try to refresh
+      if (onSuggestionApplied) {
+        await onSuggestionApplied()
+      }
     }
   }
 
@@ -38,7 +55,9 @@ export function SuggestionItem({
     try {
       await markSuggestion(docId, suggestion.id, "dismissed")
       onDismiss()
-      window.location.reload() // Simple reload for now
+      if (onSuggestionApplied) {
+        await onSuggestionApplied()
+      }
     } catch (error) {
       console.error("Error dismissing suggestion:", error)
     }
