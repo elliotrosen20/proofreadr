@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "WordWise - AI Writing Assistant",
-  description: "Responsible AI that ensures your writing and reputation shine. Get grammar, spelling, and style suggestions in real-time."
+  description: "Write with confidence. Communicate with impact. AI-powered suggestions for grammar, style, and clarity to help professionals communicate effectively."
 }
 
 export default function RootLayout({
