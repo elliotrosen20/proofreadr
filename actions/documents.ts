@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server"
 import { db } from "@/db"
 import { documents, suggestions } from "@/db/schema/documents"
+import type { SelectDocument, SelectSuggestion } from "@/db/schema/documents"
 import { eq, desc, and } from "drizzle-orm"
 import { readabilityScore, generateMockSuggestions } from "@/lib/readability"
 import { uuid } from "@/lib/uuid"
@@ -40,7 +41,7 @@ export async function getDocuments(): Promise<Document[]> {
 
   // Get suggestions for each document
   const docsWithSuggestions = await Promise.all(
-    docs.map(async (doc) => {
+    docs.map(async (doc: SelectDocument) => {
       const docSuggestions = await db
         .select()
         .from(suggestions)
@@ -52,7 +53,7 @@ export async function getDocuments(): Promise<Document[]> {
         content: doc.content,
         readabilityScore: doc.readabilityScore,
         updatedAt: doc.updatedAt.getTime(),
-        suggestions: docSuggestions.map((s) => ({
+        suggestions: docSuggestions.map((s: SelectSuggestion) => ({
           id: s.id,
           startIndex: s.startIndex,
           endIndex: s.endIndex,
@@ -92,7 +93,7 @@ export async function getDocument(id: string): Promise<Document | null> {
     content: doc.content,
     readabilityScore: doc.readabilityScore,
     updatedAt: doc.updatedAt.getTime(),
-    suggestions: docSuggestions.map((s) => ({
+    suggestions: docSuggestions.map((s: SelectSuggestion) => ({
       id: s.id,
       startIndex: s.startIndex,
       endIndex: s.endIndex,
