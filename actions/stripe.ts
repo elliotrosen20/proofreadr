@@ -1,6 +1,7 @@
 "use server"
 
 // Stripe functionality completely disabled for Grammarly app
+// No imports from lib/stripe.ts to avoid environment variable dependencies
 
 export const updateStripeCustomer = async (
   userId: string,
