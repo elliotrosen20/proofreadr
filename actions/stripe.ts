@@ -1,11 +1,6 @@
 "use server"
 
-// Stripe functionality disabled for Grammarly app
-// Re-enable when billing features are needed
-
-import { SelectCustomer } from "@/db/schema/customers"
-
-type MembershipStatus = SelectCustomer["membership"]
+// Stripe functionality completely disabled for Grammarly app
 
 export const updateStripeCustomer = async (
   userId: string,
@@ -20,7 +15,7 @@ export const manageSubscriptionStatusChange = async (
   subscriptionId: string,
   customerId: string,
   productId: string
-): Promise<MembershipStatus> => {
+): Promise<"free"> => {
   console.log("Stripe functionality disabled")
   return "free"
 }
