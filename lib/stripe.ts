@@ -1,15 +1,4 @@
-import Stripe from "stripe"
+// Stripe functionality disabled for Grammarly app
+// Remove this file or re-enable when billing features are needed
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY
-
-if (!stripeSecretKey) {
-  throw new Error("STRIPE_SECRET_KEY is not set")
-}
-
-export const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: "2025-05-28.basil",
-  appInfo: {
-    name: "Mckay's App Template",
-    version: "0.1.0"
-  }
-})
+export const stripe = null

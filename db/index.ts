@@ -2,17 +2,15 @@ import { config } from "dotenv"
 import { drizzle as drizzlePostgres } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
 import { customers } from "./schema/customers"
+import { documents, suggestions } from "./schema/documents"
 
 config({ path: ".env.local" })
 
-const databaseUrl = process.env.DATABASE_URL
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is not set")
-}
-
 const dbSchema = {
   // tables
-  customers
+  customers,
+  documents,
+  suggestions
   // relations
 }
 
@@ -21,4 +19,34 @@ function initializeDb(url: string) {
   return drizzlePostgres(client, { schema: dbSchema })
 }
 
-export const db = initializeDb(databaseUrl)
+const databaseUrl = process.env.DATABASE_URL
+
+// Create a mock database object for development when DATABASE_URL is not set
+const mockDb = {
+  select: () => ({ 
+    from: () => ({ 
+      where: () => ({ 
+        orderBy: () => Promise.resolve([])
+      }) 
+    }) 
+  }),
+  insert: () => ({ 
+    values: () => ({ 
+      returning: () => Promise.resolve([{ id: "mock-id" }])
+    }) 
+  }),
+  update: () => ({ 
+    set: () => ({ 
+      where: () => Promise.resolve()
+    }) 
+  }),
+  delete: () => ({ 
+    where: () => Promise.resolve()
+  })
+} as any
+
+export const db = databaseUrl ? initializeDb(databaseUrl) : mockDb
+
+if (!databaseUrl) {
+  console.warn("DATABASE_URL is not set - running with mock database for development")
+}

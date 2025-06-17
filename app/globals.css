@@ -143,3 +143,91 @@
     font-family: var(--font-geist-sans), system-ui, sans-serif;
   }
 }
+
+@layer utilities {
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  /* Basic prose styles for the editor */
+  .prose {
+    @apply text-gray-700 max-w-none;
+  }
+
+  .prose p {
+    @apply mb-4;
+  }
+
+  .prose h1 {
+    @apply text-2xl font-bold mb-4;
+  }
+
+  .prose h2 {
+    @apply text-xl font-bold mb-3;
+  }
+
+  .prose h3 {
+    @apply text-lg font-bold mb-2;
+  }
+
+  .prose ul, .prose ol {
+    @apply ml-6 mb-4;
+  }
+
+  .prose li {
+    @apply mb-1;
+  }
+
+  .prose strong {
+    @apply font-bold;
+  }
+
+  .prose em {
+    @apply italic;
+  }
+
+  .prose-sm {
+    @apply text-sm;
+  }
+
+  .prose-lg {
+    @apply text-lg;
+  }
+
+  .prose-xl {
+    @apply text-xl;
+  }
+
+  .prose-2xl {
+    @apply text-2xl;
+  }
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+.animate-accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+
+.animate-accordion-up {
+  animation: accordion-up 0.2s ease-out;
+}

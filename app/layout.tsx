@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Mckay's App Template",
-  description: "The easiest way to start your next project."
+  title: "Grammarly Clone - AI Writing Assistant",
+  description: "Responsible AI that ensures your writing and reputation shine. Get grammar, spelling, and style suggestions in real-time."
 }
 
 export default function RootLayout({
