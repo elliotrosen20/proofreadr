@@ -1,5 +1,6 @@
 "use client"
 
+// Updated landing page messaging
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { SignInButton, SignUpButton } from "@clerk/nextjs"
