@@ -13,6 +13,7 @@ interface SuggestionDrawerProps {
   selectedSuggestionId: string | null
   onSuggestionSelect: (id: string | null) => void
   onSuggestionApplied?: () => Promise<void>
+  applySuggestionInEditor?: ((suggestion: Suggestion) => Promise<boolean>) | null
   isGeneratingSuggestions?: boolean
   isUserTyping?: boolean
 }
@@ -23,6 +24,7 @@ export function SuggestionDrawer({
   selectedSuggestionId, 
   onSuggestionSelect,
   onSuggestionApplied,
+  applySuggestionInEditor,
   isGeneratingSuggestions = false,
   isUserTyping = false
 }: SuggestionDrawerProps) {
@@ -102,6 +104,7 @@ export function SuggestionDrawer({
                   }
                 }}
                 onSuggestionApplied={onSuggestionApplied}
+                applySuggestionInEditor={applySuggestionInEditor}
               />
             ))}
           </div>

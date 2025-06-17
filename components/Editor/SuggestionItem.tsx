@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Suggestion } from "@/types"
 import { Copy, MoreHorizontal, Info, ChevronRight } from "lucide-react"
-import { applySuggestion, markSuggestion } from "@/actions/documents"
+import { markSuggestion } from "@/actions/documents"
 
 interface SuggestionItemProps {
   suggestion: Suggestion
@@ -15,6 +15,7 @@ interface SuggestionItemProps {
   isExpanded: boolean
   onExpand: () => void
   onSuggestionApplied?: () => Promise<void>
+  applySuggestionInEditor?: ((suggestion: Suggestion) => Promise<boolean>) | null
 }
 
 export function SuggestionItem({
@@ -25,26 +26,43 @@ export function SuggestionItem({
   isExpanded,
   onExpand,
   onSuggestionApplied,
+  applySuggestionInEditor,
 }: SuggestionItemProps) {
 
   const handleAccept = async () => {
     console.log("✅ Accepting suggestion:", suggestion.originalText, "->", suggestion.suggestedText)
+    
+    if (!applySuggestionInEditor) {
+      console.error("❌ No applySuggestionInEditor function available!")
+      return
+    }
+
     try {
-      await applySuggestion(docId, suggestion.id)
-      console.log("✅ Database updated, now refreshing UI...")
+      // Apply suggestion directly in the editor
+      const success = await applySuggestionInEditor(suggestion)
       
-      if (onSuggestionApplied) {
-        console.log("🔄 Calling onSuggestionApplied callback...")
-        await onSuggestionApplied()
-        console.log("✅ onSuggestionApplied callback completed")
+      if (success) {
+        console.log("✅ Suggestion applied successfully in editor")
+        
+        // Mark the suggestion as accepted in the database
+        await markSuggestion(docId, suggestion.id, "accepted")
+        
+        // Refresh the UI
+        if (onSuggestionApplied) {
+          console.log("🔄 Calling onSuggestionApplied callback...")
+          await onSuggestionApplied()
+          console.log("✅ onSuggestionApplied callback completed")
+        }
       } else {
-        console.warn("❌ No onSuggestionApplied callback provided!")
-        // Fallback: force page refresh if callback isn't working
-        window.location.reload()
+        console.warn("⚠️ Suggestion could not be applied - text may have changed")
+        // Still refresh the UI in case the suggestion is no longer valid
+        if (onSuggestionApplied) {
+          await onSuggestionApplied()
+        }
       }
     } catch (error) {
       console.error("❌ Error accepting suggestion:", error)
-      // If there's an error (like suggestion not found), still try to refresh
+      // Still try to refresh the UI
       if (onSuggestionApplied) {
         await onSuggestionApplied()
       }
@@ -153,6 +171,7 @@ export function SuggestionItem({
                 size="sm"
                 className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2"
                 onClick={handleAccept}
+                disabled={!applySuggestionInEditor}
               >
                 Accept
               </Button>
