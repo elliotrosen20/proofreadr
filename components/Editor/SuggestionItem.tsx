@@ -161,20 +161,20 @@ export function SuggestionItem({
         isHighlighted ? "border-red-300 shadow-md ring-2 ring-red-200" : "border-gray-200"
       }`}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
+      <CardContent className="p-3">
+        <div className="flex items-start gap-2">
           {getIcon()}
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               <Badge variant="secondary" className="text-xs font-medium">
                 {suggestion.type === "spelling" ? "Correctness" : "Clarity"}
               </Badge>
               <span className="text-sm text-gray-600">• {getTypeLabel()}</span>
-              <Info className="w-4 h-4 text-gray-400 ml-auto" />
+              <Info className="w-4 h-4 text-gray-400 ml-auto flex-shrink-0" />
             </div>
 
-            <div className="mb-4">
-              <span className="text-base text-gray-700">
+            <div className="mb-4 break-words">
+              <span className="text-sm text-gray-700">
                 <span className="text-gray-500 line-through">{suggestion.originalText}</span>{" "}
                 <span className="font-semibold text-green-600">{suggestion.suggestedText}</span>
               </span>
@@ -183,7 +183,7 @@ export function SuggestionItem({
             <div className="flex gap-2">
               <Button
                 size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-1.5 text-xs flex-1"
                 onClick={handleAccept}
                 disabled={!applySuggestionInEditor}
               >
@@ -192,16 +192,10 @@ export function SuggestionItem({
               <Button
                 size="sm"
                 variant="outline"
-                className="text-gray-600 border-gray-300 px-4 py-2"
+                className="text-gray-600 border-gray-300 px-3 py-1.5 text-xs flex-1"
                 onClick={handleDismiss}
               >
                 Dismiss
-              </Button>
-              <Button size="sm" variant="ghost" className="p-2 text-gray-500">
-                <Copy className="w-4 h-4" />
-              </Button>
-              <Button size="sm" variant="ghost" className="p-2 text-gray-500">
-                <MoreHorizontal className="w-4 h-4" />
               </Button>
             </div>
           </div>

@@ -53,10 +53,10 @@ export function TopBar({ document }: TopBarProps) {
           </Button>
           
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xs">G</span>
+            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">W</span>
             </div>
-            <span className="font-semibold text-gray-900">Grammarly</span>
+            <span className="font-semibold text-gray-900">WordWise</span>
           </div>
           
           {isEditing ? (
@@ -80,10 +80,6 @@ export function TopBar({ document }: TopBarProps) {
 
         <div className="flex items-center gap-2">
           <UserButton />
-          
-          <Button variant="ghost" size="sm" className="p-2">
-            <MoreHorizontal className="w-4 h-4" />
-          </Button>
         </div>
       </div>
     </div>

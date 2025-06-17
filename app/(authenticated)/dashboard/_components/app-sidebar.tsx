@@ -92,6 +92,14 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
+        <div className="p-2 pb-0">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">W</span>
+            </div>
+            <span className="font-semibold text-sidebar-foreground">WordWise</span>
+          </div>
+        </div>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>

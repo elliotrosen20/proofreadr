@@ -10,7 +10,7 @@ import { getDocuments } from "@/actions/documents"
 import type { Document } from "@/types"
 import { UserButton } from "@clerk/nextjs"
 
-export default function GrammarlyDashboard() {
+export default function WordWiseDashboard() {
   const [documents, setDocuments] = useState<Document[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
@@ -64,17 +64,17 @@ export default function GrammarlyDashboard() {
       <div className="w-64 bg-white border-r flex flex-col">
         <div className="p-4 border-b">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">G</span>
+            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">W</span>
             </div>
-            <span className="font-semibold">grammarly</span>
+            <span className="font-semibold">WordWise</span>
             <span className="text-xs bg-gray-100 px-2 py-1 rounded">Free</span>
           </div>
         </div>
 
         <div className="flex-1 p-4">
           <div className="space-y-2">
-            <Button variant="ghost" className="w-full justify-start text-green-600 bg-green-50">
+            <Button variant="ghost" className="w-full justify-start text-blue-600 bg-blue-50">
               <FileText className="w-4 h-4 mr-3" />
               Documents
             </Button>

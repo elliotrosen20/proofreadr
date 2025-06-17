@@ -37,7 +37,12 @@ export function Header({ userMembership }: HeaderProps) {
         >
           <div className="flex lg:flex-1">
             <Link href="/" className="-m-1.5 p-1.5">
-              <span className="text-xl font-bold">Mckay's App Template</span>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">W</span>
+                </div>
+                <span className="text-xl font-bold">WordWise</span>
+              </div>
             </Link>
           </div>
           <div className="flex lg:hidden">
@@ -122,7 +127,12 @@ export function Header({ userMembership }: HeaderProps) {
                 className="-m-1.5 p-1.5"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <span className="text-xl font-bold">Takeoff</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-xs">W</span>
+                  </div>
+                  <span className="text-xl font-bold">WordWise</span>
+                </div>
               </Link>
               <button
                 type="button"

@@ -18,7 +18,7 @@ export function NewDocButton() {
   }
 
   return (
-    <Button onClick={handleCreateDocument} className="bg-green-600 hover:bg-green-700">
+    <Button onClick={handleCreateDocument} className="bg-blue-600 hover:bg-blue-700">
       <Plus className="w-4 h-4 mr-2" />
       New document
     </Button>

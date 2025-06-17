@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server"
-import GrammarlyDashboard from "@/components/Dashboard/GrammarlyDashboard"
+import WordWiseDashboard from "@/components/Dashboard/GrammarlyDashboard"
 import LandingPage from "@/components/LandingPage"
 
 export default async function HomePage() {
@@ -9,5 +9,5 @@ export default async function HomePage() {
     return <LandingPage />
   }
 
-  return <GrammarlyDashboard />
+  return <WordWiseDashboard />
 } 

@@ -17,10 +17,10 @@ export default function LandingPage() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">G</span>
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">W</span>
               </div>
-              <span className="text-xl font-semibold text-gray-900">grammarly</span>
+              <span className="text-xl font-semibold text-gray-900">WordWise</span>
             </div>
 
             {/* Navigation */}
@@ -30,7 +30,7 @@ export default function LandingPage() {
               </SignInButton>
 
               <SignUpButton mode="modal">
-                <Button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
                   Sign up
                 </Button>
               </SignUpButton>
@@ -43,7 +43,7 @@ export default function LandingPage() {
               </SignInButton>
               
               <SignUpButton mode="modal">
-                <Button className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 text-sm rounded">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-sm rounded">
                   Sign up
                 </Button>
               </SignUpButton>
@@ -70,7 +70,7 @@ export default function LandingPage() {
 
             <div className="space-y-4">
               <SignUpButton mode="modal">
-                <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg rounded-lg flex items-center gap-2">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg rounded-lg flex items-center gap-2">
                   Sign up
                   <ArrowRight className="w-5 h-5" />
                 </Button>
@@ -112,7 +112,7 @@ export default function LandingPage() {
 
                 {/* Suggestion Button */}
                 <div className="mt-6">
-                  <Button className="bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 px-4 py-2 rounded-lg text-sm">
+                  <Button className="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-4 py-2 rounded-lg text-sm">
                     Make this persuasive
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
@@ -120,9 +120,9 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Floating Grammarly Logo */}
-            <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-green-600 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-xl">G</span>
+            {/* Floating WordWise Logo */}
+            <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-xl">W</span>
               <div className="absolute -top-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center">
                 <div className="w-4 h-4 flex items-center justify-center">
                   <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

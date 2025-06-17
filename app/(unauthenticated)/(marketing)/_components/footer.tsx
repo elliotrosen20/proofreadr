@@ -56,11 +56,14 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-6 pt-16 pb-8">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="space-y-8">
-            <Link href="/" className="text-xl font-bold">
-              Company
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">W</span>
+              </div>
+              <span className="text-xl font-bold">WordWise</span>
             </Link>
             <p className="text-muted-foreground text-sm leading-6">
-              Your company description here.
+              AI-powered writing assistant that helps you write with confidence and clarity.
             </p>
             <div className="flex space-x-6">
               {socialLinks.map(item => (
@@ -152,7 +155,7 @@ export function Footer() {
         </div>
         <div className="border-border mt-16 border-t pt-8 sm:mt-20 lg:mt-24">
           <p className="text-muted-foreground text-xs leading-5">
-            &copy; {new Date().getFullYear()} Company, Inc. All rights reserved.
+            &copy; {new Date().getFullYear()} WordWise, Inc. All rights reserved.
           </p>
         </div>
       </div>

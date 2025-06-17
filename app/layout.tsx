@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Grammarly Clone - AI Writing Assistant",
+  title: "WordWise - AI Writing Assistant",
   description: "Responsible AI that ensures your writing and reputation shine. Get grammar, spelling, and style suggestions in real-time."
 }
 
