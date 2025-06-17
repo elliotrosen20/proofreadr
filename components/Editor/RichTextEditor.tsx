@@ -26,6 +26,7 @@ export function RichTextEditor({
   const [userInputContent, setUserInputContent] = useState<string>("")
   const isApplyingSuggestion = useRef(false)
   const lastGeneratedContent = useRef<string>("")
+  const analysisId = useRef(0) // Track analysis freshness
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -61,6 +62,7 @@ export function RichTextEditor({
     try {
       // Set flag to prevent triggering new suggestions during application
       isApplyingSuggestion.current = true
+      analysisId.current++ // Invalidate any ongoing analysis
       
       const { originalText, suggestedText } = suggestion
 
@@ -133,7 +135,9 @@ export function RichTextEditor({
         
         // Only generate if content has actually changed since last generation
         if (currentText.length > 10 && currentText !== lastGeneratedContent.current) {
-          console.log("🤖 Starting AI analysis for new content...")
+          const currentAnalysisId = ++analysisId.current // Increment for new analysis
+          
+          console.log(`🤖 Starting AI analysis #${currentAnalysisId} for new content...`)
           
           setIsGenerating(true)
           setIsTyping(false)
@@ -141,15 +145,24 @@ export function RichTextEditor({
           
           try {
             const result = await generateSuggestions(docId, currentText)
-            console.log(`✅ AI analysis complete: ${result.count} ${result.type} suggestions generated`)
             
-            // Update tracking
-            lastGeneratedContent.current = currentText
+            // Only update if this is still the latest analysis
+            if (currentAnalysisId === analysisId.current) {
+              console.log(`✅ AI analysis #${currentAnalysisId} complete: ${result.count} ${result.type} suggestions generated`)
+              
+              // Update tracking
+              lastGeneratedContent.current = currentText
+            } else {
+              console.log(`❌ AI analysis #${currentAnalysisId} was cancelled by newer operation`)
+            }
           } catch (error) {
             console.error("Error generating suggestions:", error)
           } finally {
-            setIsGenerating(false)
-            onGenerationStateChange?.(false, false)
+            // Only update state if this analysis is still current
+            if (currentAnalysisId === analysisId.current) {
+              setIsGenerating(false)
+              onGenerationStateChange?.(false, false)
+            }
           }
         } else {
           // Just update typing state without generating

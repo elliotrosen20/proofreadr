@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server"
 import { db } from "@/db"
 import { documents, suggestions } from "@/db/schema/documents"
 import type { SelectDocument, SelectSuggestion } from "@/db/schema/documents"
-import { eq, desc, and } from "drizzle-orm"
+import { eq, desc, and, inArray } from "drizzle-orm"
 import { readabilityScore, generateMockSuggestions } from "@/lib/readability"
 import { generateSpellcheckSuggestions, generateAdvancedStyleSuggestions } from "@/lib/openai"
 import { uuid } from "@/lib/uuid"
@@ -189,13 +189,22 @@ export async function generateSuggestions(docId: string, text: string): Promise<
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
 
-  // Verify document ownership
+  // Verify document ownership and get current content
   const [doc] = await db
     .select()
     .from(documents)
     .where(and(eq(documents.id, docId), eq(documents.userId, userId)))
 
   if (!doc) throw new Error("Document not found")
+
+  // Check if document content has changed since analysis started
+  const currentPlainText = doc.content.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+  const analysisText = text.replace(/\s+/g, ' ').trim()
+  
+  if (currentPlainText !== analysisText) {
+    console.log("⚠️ Document content changed during analysis - cancelling suggestion generation")
+    return { type: 'mock', count: 0 }
+  }
 
   // Generate new suggestions using OpenAI with fallback to mock suggestions
   let newSuggestions: Suggestion[] = []
@@ -217,6 +226,21 @@ export async function generateSuggestions(docId: string, text: string): Promise<
     console.warn("OpenAI API failed, falling back to mock suggestions:", error)
     newSuggestions = generateMockSuggestions(text, docId)
     console.log(`Generated ${newSuggestions.length} mock suggestions`)
+  }
+
+  // Double-check content hasn't changed before saving suggestions
+  const [finalDoc] = await db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.id, docId), eq(documents.userId, userId)))
+
+  if (finalDoc) {
+    const finalPlainText = finalDoc.content.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+    
+    if (finalPlainText !== analysisText) {
+      console.log("⚠️ Document content changed during AI processing - discarding suggestions")
+      return { type: 'mock', count: 0 }
+    }
   }
 
   // Determine if we used AI or mock suggestions
@@ -357,6 +381,63 @@ export async function markSuggestion(
     .update(suggestions)
     .set({ status })
     .where(and(eq(suggestions.id, suggestionId), eq(suggestions.documentId, docId)))
+
+  revalidatePath("/documents/[id]", "page")
+}
+
+export async function clearPendingSuggestions(docId: string, currentContent?: string): Promise<void> {
+  const { userId } = await auth()
+  if (!userId) throw new Error("Unauthorized")
+
+  // Verify document ownership
+  const [doc] = await db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.id, docId), eq(documents.userId, userId)))
+
+  if (!doc) throw new Error("Document not found")
+
+  if (currentContent) {
+    // Selective clearing - only remove suggestions where originalText no longer exists
+    const pendingSuggestions = await db
+      .select()
+      .from(suggestions)
+      .where(and(eq(suggestions.documentId, docId), eq(suggestions.status, "pending")))
+
+    // Convert HTML to plain text for comparison
+    const plainText = currentContent.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+    
+    const staleSuggestionIds: string[] = []
+    
+    for (const suggestion of pendingSuggestions) {
+      // If the original text no longer exists exactly in the document, it's stale
+      if (!plainText.includes(suggestion.originalText)) {
+        staleSuggestionIds.push(suggestion.id)
+      }
+    }
+
+    if (staleSuggestionIds.length > 0) {
+      await db
+        .delete(suggestions)
+        .where(and(
+          eq(suggestions.documentId, docId), 
+          eq(suggestions.status, "pending"),
+          // Only delete the stale ones
+          inArray(suggestions.id, staleSuggestionIds)
+        ))
+      
+      console.log(`🧹 Cleared ${staleSuggestionIds.length} stale suggestions for document:`, docId)
+    } else {
+      console.log("✅ No stale suggestions found - all remaining suggestions are still valid")
+    }
+  } else {
+    // Fallback - delete all pending suggestions for this document (original behavior)
+    await db
+      .delete(suggestions)
+      .where(and(eq(suggestions.documentId, docId), eq(suggestions.status, "pending")))
+
+    console.log("🧹 Cleared all pending suggestions for document:", docId)
+  }
 
   revalidatePath("/documents/[id]", "page")
 } 

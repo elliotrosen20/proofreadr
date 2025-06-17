@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Suggestion } from "@/types"
 import { Copy, MoreHorizontal, Info, ChevronRight } from "lucide-react"
-import { markSuggestion } from "@/actions/documents"
+import { markSuggestion, clearPendingSuggestions } from "@/actions/documents"
 
 interface SuggestionItemProps {
   suggestion: Suggestion
@@ -46,6 +46,20 @@ export function SuggestionItem({
         
         // Mark the suggestion as accepted in the database
         await markSuggestion(docId, suggestion.id, "accepted")
+        
+        // Get current document content for selective clearing
+        const { getDocument } = await import("@/actions/documents")
+        const currentDoc = await getDocument(docId)
+        
+        if (currentDoc) {
+          // Clear only suggestions where originalText no longer exists in the new content
+          console.log("🧹 Selectively clearing stale suggestions...")
+          await clearPendingSuggestions(docId, currentDoc.content)
+        } else {
+          // Fallback - clear all if we can't get current content
+          console.log("🧹 Clearing all pending suggestions (fallback)...")
+          await clearPendingSuggestions(docId)
+        }
         
         // Refresh the UI
         if (onSuggestionApplied) {
