@@ -1,6 +1,6 @@
 "use client"
 
-// Updated landing page messaging
+// Updated landing page messaging - professional focus
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { SignInButton, SignUpButton } from "@clerk/nextjs"
