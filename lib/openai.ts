@@ -437,4 +437,143 @@ Guidelines for professional summaries:
     console.error("Error generating TLDR summary:", error)
     return null
   }
+}
+
+// Tone rewriting functionality
+export type ToneType = 'casual' | 'formal' | 'friendly' | 'assertive'
+
+export interface ToneRewriteResult {
+  originalText: string
+  rewrittenText: string
+  tone: ToneType
+  changes: string[]
+  timestamp: number
+}
+
+export async function rewriteTextTone(text: string, tone: ToneType): Promise<ToneRewriteResult | null> {
+  try {
+    // Keep the original HTML content instead of stripping it
+    const htmlContent = text.trim()
+    
+    // Extract plain text only for length checking
+    const plainTextForCheck = text.replace(/<[^>]*>/g, '').trim()
+    
+    if (plainTextForCheck.length < 10) {
+      return null // Too short to meaningfully rewrite
+    }
+
+    const toneDescriptions = {
+      casual: "relaxed, conversational, and approachable while maintaining professionalism",
+      formal: "professional, structured, and authoritative with proper business language",
+      friendly: "warm, personable, and welcoming while staying professional",
+      assertive: "confident, direct, and decisive with clear action-oriented language"
+    }
+
+    const prompt = `
+You are a professional writing coach specializing in tone adjustment for business communication. Rewrite the following HTML content to be ${toneDescriptions[tone]}.
+
+CRITICAL: You must preserve ALL HTML formatting exactly as it appears. Only change the text content between HTML tags.
+
+Original HTML content:
+${htmlContent}
+
+HTML Preservation Rules:
+- Keep ALL HTML tags exactly the same: <p>, <strong>, <em>, <br>, <ul>, <li>, <a>, etc.
+- Do NOT add, remove, or modify any HTML tags
+- Do NOT change any HTML attributes
+- ONLY change the text content between the opening and closing tags
+- Maintain the exact HTML structure and hierarchy
+
+Guidelines for ${tone} tone:
+${tone === 'casual' ? `
+- Use contractions (don't, won't, it's)
+- Shorter, more conversational sentences
+- Friendly but professional language
+- Approachable and relatable phrasing` : ''}
+${tone === 'formal' ? `
+- Avoid contractions (do not, will not, it is)
+- Use complete, structured sentences
+- Professional vocabulary and terminology
+- Maintain respectful, authoritative tone` : ''}
+${tone === 'friendly' ? `
+- Use warm, welcoming language
+- Include personal touches where appropriate
+- Positive and encouraging phrasing
+- Maintain professional boundaries` : ''}
+${tone === 'assertive' ? `
+- Use strong, confident language
+- Direct and action-oriented phrasing
+- Clear statements and expectations
+- Decisive and authoritative tone` : ''}
+
+Respond with JSON in this exact format:
+{
+  "rewrittenText": "The complete HTML content with preserved tags but rewritten text content",
+  "changes": [
+    "Changed 'I think maybe' to 'I recommend' for more assertive language",
+    "Replaced formal phrases with conversational alternatives",
+    "Added warmer, more personal language"
+  ]
+}
+
+Example:
+Input: <p>I think maybe we should <strong>consider</strong> this option.</p>
+Output for assertive: <p>I recommend we <strong>implement</strong> this option.</p>
+
+Preserve:
+- All factual information and meaning
+- Professional appropriateness
+- All HTML formatting and structure
+- Key technical terms when necessary
+`
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `You are a professional tone adjustment expert. Rewrite HTML content to match the requested tone while preserving ALL HTML formatting exactly. Never add, remove, or modify HTML tags - only change text content between tags. Always respond with valid JSON.`
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000,
+    })
+
+    const content = response.choices[0]?.message?.content?.trim()
+    if (!content) {
+      return null
+    }
+
+    try {
+      // Remove markdown code blocks if present
+      let cleanContent = content.trim()
+      if (cleanContent.startsWith('```json')) {
+        cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+      } else if (cleanContent.startsWith('```')) {
+        cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '')
+      }
+      
+      const parsed = JSON.parse(cleanContent)
+      
+      return {
+        originalText: plainTextForCheck, // Plain text for display purposes
+        rewrittenText: parsed.rewrittenText, // Full HTML with preserved formatting
+        tone,
+        changes: parsed.changes || [],
+        timestamp: Date.now()
+      }
+    } catch (parseError) {
+      console.error("Failed to parse tone rewrite response:", parseError)
+      console.error("Raw response:", content)
+      return null
+    }
+
+  } catch (error) {
+    console.error("Error rewriting text tone:", error)
+    return null
+  }
 } 

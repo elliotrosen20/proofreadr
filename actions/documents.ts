@@ -6,9 +6,9 @@ import { documents, suggestions } from "@/db/schema/documents"
 import type { SelectDocument, SelectSuggestion } from "@/db/schema/documents"
 import { eq, desc, and, inArray } from "drizzle-orm"
 import { readabilityScore, generateMockSuggestions, getReadabilityData } from "@/lib/readability"
-import { generateSpellcheckSuggestions, generateAdvancedStyleSuggestions, generateTLDRSummary } from "@/lib/openai"
+import { generateSpellcheckSuggestions, generateAdvancedStyleSuggestions, generateTLDRSummary, rewriteTextTone } from "@/lib/openai"
 import { uuid } from "@/lib/uuid"
-import type { Document, Suggestion } from "@/types"
+import type { Document, Suggestion, ToneType, ToneRewriteResult } from "@/types"
 import { revalidatePath } from "next/cache"
 
 export async function createDocument(): Promise<string> {
@@ -523,5 +523,51 @@ export async function generateDocumentTLDR(id: string) {
   } catch (error) {
     console.error("Error generating TLDR:", error)
     throw new Error("Failed to generate summary")
+  }
+}
+
+export async function rewriteDocumentTone(id: string, tone: ToneType): Promise<ToneRewriteResult | null> {
+  const { userId } = await auth()
+  if (!userId) throw new Error("Unauthorized")
+
+  const [doc] = await db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.id, id), eq(documents.userId, userId)))
+
+  if (!doc) throw new Error("Document not found")
+
+  try {
+    // Generate tone rewrite using AI - pass full HTML content
+    if (process.env.OPENAI_API_KEY) {
+      const rewriteResult = await rewriteTextTone(doc.content, tone)
+      if (rewriteResult) {
+        // Update document with rewritten HTML content (preserving formatting)
+        await db
+          .update(documents)
+          .set({
+            content: rewriteResult.rewrittenText, // This now contains HTML with preserved formatting
+            updatedAt: new Date(),
+          })
+          .where(eq(documents.id, id))
+
+        revalidatePath("/documents/[id]", "page")
+        return rewriteResult
+      }
+    }
+    
+    // Fallback when AI is not available
+    const plainTextFallback = doc.content.replace(/<[^>]*>/g, '').trim()
+    return {
+      originalText: plainTextFallback,
+      rewrittenText: doc.content, // Keep original HTML when AI unavailable
+      tone,
+      changes: ["AI tone adjustment unavailable - original content preserved with formatting"],
+      timestamp: Date.now()
+    }
+    
+  } catch (error) {
+    console.error("Error rewriting document tone:", error)
+    throw new Error("Failed to rewrite document tone")
   }
 } 

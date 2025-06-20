@@ -3,10 +3,11 @@
 import { TopBar } from "./TopBar"
 import { RichTextEditor } from "./RichTextEditor"
 import { SuggestionDrawer } from "./SuggestionDrawer"
+import { ToneDrawer } from "./ToneDrawer"
 import { FooterStats } from "./FooterStats"
 import { useState, useEffect, useCallback } from "react"
-import { getSuggestions, getDocument } from "@/actions/documents"
-import type { Document, Suggestion } from "@/types"
+import { getSuggestions, getDocument, updateDocumentContent } from "@/actions/documents"
+import type { Document, Suggestion, ToneRewriteResult } from "@/types"
 
 interface DocumentEditorProps {
   document: Document
@@ -26,9 +27,11 @@ export default function DocumentEditor({ document }: DocumentEditorProps) {
   const [selectedSuggestionId, setSelectedSuggestionId] = useState<string | null>(null)
   const [syncEditor, setSyncEditor] = useState<(() => Promise<void>) | null>(null)
   const [applySuggestionInEditor, setApplySuggestionInEditor] = useState<((suggestion: Suggestion) => Promise<boolean>) | null>(null)
+  const [directContentUpdate, setDirectContentUpdate] = useState<((content: string) => Promise<void>) | null>(null)
   const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false)
   const [isUserTyping, setIsUserTyping] = useState(false)
   const [currentDocumentContent, setCurrentDocumentContent] = useState<string>(document.content)
+  const [currentDocument, setCurrentDocument] = useState<Document>(document)
 
   // Load suggestions and validate them against current content
   useEffect(() => {
@@ -74,6 +77,7 @@ export default function DocumentEditor({ document }: DocumentEditorProps) {
   // Track document content changes
   useEffect(() => {
     setCurrentDocumentContent(document.content)
+    setCurrentDocument(document)
   }, [document.content])
 
   const handleEditorReady = useCallback((syncFunction: () => Promise<void>) => {
@@ -82,6 +86,10 @@ export default function DocumentEditor({ document }: DocumentEditorProps) {
 
   const handleApplySuggestionReady = useCallback((applySuggestionFunction: (suggestion: Suggestion) => Promise<boolean>) => {
     setApplySuggestionInEditor(() => applySuggestionFunction)
+  }, [])
+
+  const handleDirectContentUpdateReady = useCallback((updateFunction: (content: string) => Promise<void>) => {
+    setDirectContentUpdate(() => updateFunction)
   }, [])
 
   const handleGenerationStateChange = useCallback((isGenerating: boolean, isTyping: boolean) => {
@@ -98,6 +106,7 @@ export default function DocumentEditor({ document }: DocumentEditorProps) {
       const updatedDoc = await getDocument(document.id)
       if (updatedDoc) {
         setCurrentDocumentContent(updatedDoc.content)
+        setCurrentDocument(updatedDoc)
         
         // Filter suggestions based on updated content
         const validSuggestions = docSuggestions.filter(suggestion => 
@@ -113,19 +122,65 @@ export default function DocumentEditor({ document }: DocumentEditorProps) {
     }
   }, [document.id])
 
+  const handleToneApplied = useCallback(async (result: ToneRewriteResult) => {
+    // Update the document content when tone is applied
+    try {
+      const updatedDoc = await getDocument(document.id)
+      if (updatedDoc) {
+        setCurrentDocumentContent(updatedDoc.content)
+        setCurrentDocument(updatedDoc)
+        
+        // Sync the editor with the new content
+        if (syncEditor) {
+          await syncEditor()
+        }
+      }
+    } catch (error) {
+      console.error("Error syncing after tone change:", error)
+    }
+  }, [document.id, syncEditor])
+
+  const handleContentRevert = useCallback(async (content: string) => {
+    // Revert to a previous version using direct content update
+    try {
+      if (directContentUpdate) {
+        await directContentUpdate(content)
+        
+        // Update local state
+        setCurrentDocumentContent(content)
+        const updatedDoc = { ...currentDocument, content }
+        setCurrentDocument(updatedDoc)
+        
+        console.log("✅ Content reverted successfully")
+      } else {
+        console.warn("❌ Direct content update function not available")
+      }
+    } catch (error) {
+      console.error("Error reverting content:", error)
+    }
+  }, [directContentUpdate, currentDocument])
+
   return (
     <div className="flex flex-col h-screen bg-white">
-      <TopBar document={document} />
+      <TopBar document={currentDocument} />
       
       <div className="flex flex-1 overflow-hidden">
+        <ToneDrawer 
+          documentId={document.id}
+          documentContent={currentDocumentContent}
+          onToneApplied={handleToneApplied}
+          onContentRevert={handleContentRevert}
+        />
+        
         <div className="flex-1 flex flex-col">
           <RichTextEditor 
             docId={document.id} 
             onEditorReady={handleEditorReady}
             onGenerationStateChange={handleGenerationStateChange}
             onApplySuggestionReady={handleApplySuggestionReady}
+            onDirectContentUpdateReady={handleDirectContentUpdateReady}
           />
-          <FooterStats document={document} />
+          <FooterStats document={currentDocument} />
         </div>
         
         <SuggestionDrawer 

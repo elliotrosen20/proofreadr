@@ -38,4 +38,22 @@ export interface TLDRSummary {
   wordCount: number
   originalWordCount: number
   compressionRatio: number
+}
+
+export type ToneType = 'casual' | 'formal' | 'friendly' | 'assertive'
+
+export interface ToneRewriteResult {
+  originalText: string
+  rewrittenText: string
+  tone: ToneType
+  changes: string[]
+  timestamp: number
+}
+
+export interface VersionHistory {
+  id: string
+  content: string
+  timestamp: number
+  action: string
+  tone?: ToneType
 } 

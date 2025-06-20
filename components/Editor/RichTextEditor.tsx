@@ -12,13 +12,15 @@ interface RichTextEditorProps {
   onEditorReady?: (syncFunction: () => Promise<void>) => void
   onGenerationStateChange?: (isGenerating: boolean, isTyping: boolean) => void
   onApplySuggestionReady?: (applySuggestionFunction: (suggestion: Suggestion) => Promise<boolean>) => void
+  onDirectContentUpdateReady?: (updateFunction: (content: string) => Promise<void>) => void
 }
 
 export function RichTextEditor({ 
   docId, 
   onEditorReady, 
   onGenerationStateChange, 
-  onApplySuggestionReady 
+  onApplySuggestionReady, 
+  onDirectContentUpdateReady 
 }: RichTextEditorProps) {
   const [document, setDocument] = useState<Document | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -233,6 +235,38 @@ export function RichTextEditor({
       onApplySuggestionReady(applySuggestionInEditor)
     }
   }, [editor, onApplySuggestionReady])
+
+  // Provide direct content update function to parent
+  useEffect(() => {
+    if (editor && onDirectContentUpdateReady) {
+      const directContentUpdate = async (content: string) => {
+        try {
+          // Set flag to prevent triggering suggestions during update
+          isApplyingSuggestion.current = true
+          
+          // Update editor content directly
+          editor.commands.setContent(content, false)
+          
+          // Save to database
+          await updateDocumentContent(docId, content)
+          
+          // Update tracking variables
+          const plainText = editor.getText()
+          setUserInputContent(plainText)
+          lastGeneratedContent.current = plainText
+          
+          console.log("✅ Direct content update completed")
+        } catch (error) {
+          console.error("❌ Error in direct content update:", error)
+        } finally {
+          // Reset the flag
+          isApplyingSuggestion.current = false
+        }
+      }
+      
+      onDirectContentUpdateReady(directContentUpdate)
+    }
+  }, [editor, onDirectContentUpdateReady, docId])
 
   if (!editor) return null
 
