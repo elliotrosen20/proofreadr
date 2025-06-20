@@ -237,9 +237,11 @@ export function RichTextEditor({
   if (!editor) return null
 
   return (
-    <div className="flex-1 bg-white">
-      <div className="max-w-4xl mx-auto">
-        <EditorContent editor={editor} />
+    <div className="flex-1 bg-white overflow-hidden flex flex-col">
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto">
+          <EditorContent editor={editor} />
+        </div>
       </div>
     </div>
   )

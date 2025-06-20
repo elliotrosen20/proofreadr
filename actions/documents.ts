@@ -5,8 +5,8 @@ import { db } from "@/db"
 import { documents, suggestions } from "@/db/schema/documents"
 import type { SelectDocument, SelectSuggestion } from "@/db/schema/documents"
 import { eq, desc, and, inArray } from "drizzle-orm"
-import { readabilityScore, generateMockSuggestions } from "@/lib/readability"
-import { generateSpellcheckSuggestions, generateAdvancedStyleSuggestions } from "@/lib/openai"
+import { readabilityScore, generateMockSuggestions, getReadabilityData } from "@/lib/readability"
+import { generateSpellcheckSuggestions, generateAdvancedStyleSuggestions, generateTLDRSummary } from "@/lib/openai"
 import { uuid } from "@/lib/uuid"
 import type { Document, Suggestion } from "@/types"
 import { revalidatePath } from "next/cache"
@@ -142,7 +142,7 @@ export async function updateDocumentContent(id: string, content: string): Promis
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
 
-  const score = readabilityScore(content)
+  const score = await readabilityScore(content)
 
   await db
     .update(documents)
@@ -440,4 +440,88 @@ export async function clearPendingSuggestions(docId: string, currentContent?: st
   }
 
   revalidatePath("/documents/[id]", "page")
+}
+
+export async function getDocumentReadabilityData(id: string) {
+  const { userId } = await auth()
+  if (!userId) throw new Error("Unauthorized")
+
+  const [doc] = await db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.id, id), eq(documents.userId, userId)))
+
+  if (!doc) throw new Error("Document not found")
+
+  try {
+    const readabilityData = await getReadabilityData(doc.content)
+    return readabilityData
+  } catch (error) {
+    console.error("Error getting readability data:", error)
+    // Return basic data as fallback
+    return {
+      score: doc.readabilityScore || 0,
+      grade: "N/A",
+      insights: ["Error analyzing readability"],
+      recommendations: ["Try refreshing to re-analyze"]
+    }
+  }
+}
+
+export async function generateDocumentTLDR(id: string) {
+  const { userId } = await auth()
+  if (!userId) throw new Error("Unauthorized")
+
+  const [doc] = await db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.id, id), eq(documents.userId, userId)))
+
+  if (!doc) throw new Error("Document not found")
+
+  try {
+    // Generate TLDR using AI
+    if (process.env.OPENAI_API_KEY) {
+      const tldrSummary = await generateTLDRSummary(doc.content)
+      if (tldrSummary) {
+        return tldrSummary
+      }
+    }
+    
+    // Fallback for when AI is not available
+    const plainText = doc.content.replace(/<[^>]*>/g, '').trim()
+    const words = plainText.split(/\s+/)
+    const wordCount = words.length
+    
+    if (wordCount < 50) {
+      return {
+        summary: plainText,
+        keyPoints: ["Document is too short to summarize"],
+        wordCount,
+        originalWordCount: wordCount,
+        compressionRatio: 1
+      }
+    }
+    
+    // Simple fallback summary (first 2 sentences)
+    const sentences = plainText.split(/[.!?]+/).filter((s: string) => s.trim().length > 0)
+    const firstTwoSentences = sentences.slice(0, 2).join('. ').trim() + '.'
+    const summaryWordCount = firstTwoSentences.split(/\s+/).length
+    
+    return {
+      summary: firstTwoSentences,
+      keyPoints: [
+        "AI summarization unavailable - showing first sentences",
+        `Document contains ${wordCount} words total`,
+        "Enable OpenAI for intelligent summarization"
+      ],
+      wordCount: summaryWordCount,
+      originalWordCount: wordCount,
+      compressionRatio: Math.round((summaryWordCount / wordCount) * 100) / 100
+    }
+    
+  } catch (error) {
+    console.error("Error generating TLDR:", error)
+    throw new Error("Failed to generate summary")
+  }
 } 

@@ -23,4 +23,19 @@ export type Document = {
   readabilityScore: number | null
   updatedAt: number
   suggestions: Suggestion[]
+}
+
+export interface ReadabilityData {
+  score: number
+  grade: string
+  insights?: string[]
+  recommendations?: string[]
+}
+
+export interface TLDRSummary {
+  summary: string
+  keyPoints: string[]
+  wordCount: number
+  originalWordCount: number
+  compressionRatio: number
 } 

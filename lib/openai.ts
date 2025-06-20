@@ -205,4 +205,236 @@ Focus on meaningful improvements that enhance the writing quality. Return JSON a
     console.error("Error generating style suggestions:", error)
     return []
   }
+}
+
+// AI-powered readability analysis
+export interface ReadabilityAnalysis {
+  fleschKincaidGrade: number
+  fleschReadingEase: number
+  smogIndex: number
+  automatedReadabilityIndex: number
+  averageGradeLevel: number
+  readabilityGrade: string
+  insights: string[]
+  recommendations: string[]
+  sentenceComplexity: 'simple' | 'moderate' | 'complex'
+  vocabularyLevel: 'basic' | 'intermediate' | 'advanced'
+  clarity: number // 1-10 scale
+}
+
+export async function analyzeReadabilityWithAI(text: string): Promise<ReadabilityAnalysis | null> {
+  try {
+    const prompt = `
+You are a professional writing consultant specializing in business communication. Analyze the following text for readability from a working professional's perspective.
+
+Text to analyze:
+"${text}"
+
+Rate the text using these professional reading effort levels:
+- Easy Digest (0-6): Quick read, broad appeal, suitable for executives and busy professionals
+- Focused Reading (6-9): Requires attention but accessible, good for team communications and reports  
+- Deep Dive (9-12): Detailed content requiring concentration, suitable for technical documentation
+- Expert Level (12+): Specialized knowledge needed, complex analysis or legal language
+
+Calculate readability metrics and provide professional insights:
+1. Flesch-Kincaid Grade Level
+2. Flesch Reading Ease Score (0-100)
+3. SMOG Index
+4. Automated Readability Index (ARI)
+5. Average grade level
+6. Professional readability assessment
+7. Business communication insights
+8. Recommendations for workplace effectiveness
+
+Respond with JSON in this exact format:
+{
+  "fleschKincaidGrade": 8.5,
+  "fleschReadingEase": 65.2,
+  "smogIndex": 9.1,
+  "automatedReadabilityIndex": 8.8,
+  "averageGradeLevel": 8.6,
+  "readabilityGrade": "Focused Reading",
+  "insights": [
+    "Your writing is well-suited for professional team communication",
+    "Sentence length averaging 15 words makes this accessible to busy professionals",
+    "Technical terms are balanced with clear explanations"
+  ],
+  "recommendations": [
+    "Perfect readability level for business reports and proposals",
+    "Consider adding executive summary for C-suite distribution",
+    "Use bullet points to make key insights more scannable"
+  ],
+  "sentenceComplexity": "moderate",
+  "vocabularyLevel": "professional",
+  "clarity": 7.5
+}
+`
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a business writing expert that provides readability analysis for working professionals. Focus on workplace communication effectiveness and provide practical insights for business contexts."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.1,
+      max_tokens: 1000,
+    })
+
+    const content = response.choices[0]?.message?.content?.trim()
+    if (!content) {
+      return null
+    }
+
+    try {
+      // Remove markdown code blocks if present
+      let cleanContent = content.trim()
+      if (cleanContent.startsWith('```json')) {
+        cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+      } else if (cleanContent.startsWith('```')) {
+        cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '')
+      }
+      
+      const analysis: ReadabilityAnalysis = JSON.parse(cleanContent)
+      return analysis
+    } catch (parseError) {
+      console.error("Failed to parse readability analysis:", parseError)
+      console.error("Raw response:", content)
+      return null
+    }
+
+  } catch (error) {
+    console.error("Error analyzing readability with AI:", error)
+    return null
+  }
+}
+
+export async function getReadabilityInsights(text: string): Promise<{
+  score: number
+  grade: string
+  insights: string[]
+  recommendations: string[]
+} | null> {
+  try {
+    const analysis = await analyzeReadabilityWithAI(text)
+    if (!analysis) return null
+
+    return {
+      score: analysis.averageGradeLevel,
+      grade: analysis.readabilityGrade,
+      insights: analysis.insights,
+      recommendations: analysis.recommendations
+    }
+  } catch (error) {
+    console.error("Error getting readability insights:", error)
+    return null
+  }
+}
+
+// TLDR Summary generation
+export interface TLDRSummary {
+  summary: string
+  keyPoints: string[]
+  wordCount: number
+  originalWordCount: number
+  compressionRatio: number
+}
+
+export async function generateTLDRSummary(text: string): Promise<TLDRSummary | null> {
+  try {
+    const plainText = text.replace(/<[^>]*>/g, '').trim()
+    const originalWordCount = plainText.split(/\s+/).length
+
+    // Don't summarize very short texts
+    if (originalWordCount < 50) {
+      return {
+        summary: plainText,
+        keyPoints: ["Document is too short to summarize effectively"],
+        wordCount: originalWordCount,
+        originalWordCount,
+        compressionRatio: 1
+      }
+    }
+
+    const prompt = `
+You are a professional summarization expert specializing in business communication. Create a concise TLDR (Too Long; Didn't Read) summary of the following text for working professionals.
+
+Text to summarize:
+"${plainText}"
+
+Provide a response in this exact JSON format:
+{
+  "summary": "A clear, professional summary in 2-3 sentences that captures the main business value and key outcomes",
+  "keyPoints": [
+    "First key point focusing on actionable insights",
+    "Second key point highlighting important decisions or findings", 
+    "Third key point emphasizing business impact or next steps"
+  ]
+}
+
+Guidelines for professional summaries:
+- Keep the summary under 100 words and business-focused
+- Extract 2-5 key points that matter to decision-makers
+- Focus on outcomes, decisions, and actionable insights
+- Use professional language suitable for workplace communication
+- Highlight business value and practical implications
+- Maintain the professional tone of the original content
+`
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a professional summarization expert that creates concise, accurate summaries. Always respond with valid JSON."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.2,
+      max_tokens: 500,
+    })
+
+    const content = response.choices[0]?.message?.content?.trim()
+    if (!content) {
+      return null
+    }
+
+    try {
+      // Remove markdown code blocks if present
+      let cleanContent = content.trim()
+      if (cleanContent.startsWith('```json')) {
+        cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+      } else if (cleanContent.startsWith('```')) {
+        cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '')
+      }
+      
+      const parsed = JSON.parse(cleanContent)
+      const summaryWordCount = parsed.summary.split(/\s+/).length
+      const compressionRatio = Math.round((summaryWordCount / originalWordCount) * 100) / 100
+
+      return {
+        summary: parsed.summary,
+        keyPoints: parsed.keyPoints || [],
+        wordCount: summaryWordCount,
+        originalWordCount,
+        compressionRatio
+      }
+    } catch (parseError) {
+      console.error("Failed to parse TLDR response:", parseError)
+      console.error("Raw response:", content)
+      return null
+    }
+
+  } catch (error) {
+    console.error("Error generating TLDR summary:", error)
+    return null
+  }
 } 
