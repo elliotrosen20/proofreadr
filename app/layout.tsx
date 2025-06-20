@@ -8,6 +8,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Toaster } from "sonner"
 import "./globals.css"
 
+// Updated: Professional readability levels and TLDR feature deployed
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"]
