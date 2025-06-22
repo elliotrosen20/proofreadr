@@ -60,7 +60,7 @@ export default function LandingPage() {
           <div className="space-y-8">
             <div className="space-y-6">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Write with confidence. Communicate with impact.
+                Write with confidence. Close deals.
               </h1>
               
               <p className="text-xl text-gray-600 leading-relaxed max-w-lg">
@@ -87,7 +87,7 @@ export default function LandingPage() {
                   <span className="text-white font-bold text-2xl">W</span>
                 </div>
                 <div className="space-y-3">
-                  <h3 className="text-2xl font-bold text-gray-900">Professional Writing Assistant</h3>
+                  <h3 className="text-2xl font-bold text-gray-900">Writing Assistant for Sales Professionals</h3>
                   <p className="text-gray-600">
                     AI-powered suggestions for grammar, style, and clarity to help you communicate effectively
                   </p>
