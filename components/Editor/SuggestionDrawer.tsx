@@ -3,7 +3,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { SuggestionItem } from "./SuggestionItem"
-import { CheckCircle, X } from "lucide-react"
+import { CheckCircle } from "lucide-react"
 import { useState } from "react"
 import type { Suggestion } from "@/types"
 
@@ -45,7 +45,6 @@ export function SuggestionDrawer({
       <div className="p-4 border-b bg-white">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold text-gray-900">Suggestions</h2>
-          <X className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" />
         </div>
         
         <div className="flex flex-col gap-2">
