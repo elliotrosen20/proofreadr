@@ -224,15 +224,11 @@ export function ToneDrawer({
                        </span>
                      </div>
                     
-                    {version.tone && (
-                      <Badge variant="outline" className="text-xs mb-2">
-                        {version.tone}
-                      </Badge>
-                    )}
-                    
-                                         <div className="text-xs text-gray-600 mb-2 line-clamp-2 leading-relaxed">
-                       {version.content.substring(0, 120)}...
-                     </div>
+                                         {version.tone && (
+                       <Badge variant="outline" className="text-xs mb-2">
+                         {version.tone}
+                       </Badge>
+                     )}
                     
                                          <Button
                        variant="ghost"
