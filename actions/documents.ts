@@ -11,7 +11,7 @@ import { uuid } from "@/lib/uuid"
 import type { Document, Suggestion, ToneType, ToneRewriteResult } from "@/types"
 import { revalidatePath } from "next/cache"
 
-export async function createDocument(): Promise<string> {
+export async function createDocument(initialContent?: string, initialTitle?: string): Promise<string> {
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
 
@@ -19,8 +19,8 @@ export async function createDocument(): Promise<string> {
     .insert(documents)
     .values({
       userId,
-      title: "Untitled document",
-      content: "",
+      title: initialTitle || "Untitled document",
+      content: initialContent || "",
       readabilityScore: null,
     })
     .returning()

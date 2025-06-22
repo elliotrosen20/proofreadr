@@ -2,18 +2,23 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import { NewDocButton } from "./NewDocButton"
 import { DocumentCard } from "./DocumentCard"
-import { FileText, Search } from "lucide-react"
+import { FileText, Search, Layout } from "lucide-react"
 import { useState, useEffect } from "react"
 import { getDocuments } from "@/actions/documents"
 import type { Document } from "@/types"
 import { UserButton } from "@clerk/nextjs"
+import TemplatesDashboard from "./TemplatesDashboard"
+
+type ActiveView = 'documents' | 'templates'
 
 export default function WordWiseDashboard() {
   const [documents, setDocuments] = useState<Document[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
+  const [activeView, setActiveView] = useState<ActiveView>('documents')
 
   useEffect(() => {
     const loadDocuments = async () => {
@@ -74,9 +79,28 @@ export default function WordWiseDashboard() {
 
         <div className="flex-1 p-4">
           <div className="space-y-2">
-            <Button variant="ghost" className="w-full justify-start text-blue-600 bg-blue-50">
+            <Button 
+              variant="ghost" 
+              className={`w-full justify-start ${
+                activeView === 'documents' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => setActiveView('documents')}
+            >
               <FileText className="w-4 h-4 mr-3" />
               Documents
+            </Button>
+            <Button 
+              variant="ghost" 
+              className={`w-full justify-start ${
+                activeView === 'templates' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => setActiveView('templates')}
+            >
+              <Layout className="w-4 h-4 mr-3" />
+              Templates
+              <Badge className="ml-auto text-xs bg-green-100 text-green-800 border-green-200">
+                New
+              </Badge>
             </Button>
           </div>
         </div>
@@ -90,59 +114,74 @@ export default function WordWiseDashboard() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Documents Section */}
-        <div className="flex-1 p-8">
-          <div className="max-w-6xl mx-auto">
-            <h1 className="text-2xl font-bold mb-6">Documents</h1>
+        {activeView === 'documents' ? (
+          /* Documents Section */
+          <div className="flex-1 p-8">
+            <div className="max-w-6xl mx-auto">
+              <h1 className="text-2xl font-bold mb-6">Documents</h1>
 
-            <div className="flex gap-4 mb-6">
-              <NewDocButton />
+              <div className="flex gap-4 mb-6">
+                <NewDocButton />
 
-              <div className="flex-1 max-w-md ml-auto">
-                <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <Input
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
+                <div className="flex-1 max-w-md ml-auto">
+                  <div className="relative">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <Input
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {todayDocs.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-lg font-semibold mb-4">Today</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {todayDocs.map((doc) => (
-                    <DocumentCard key={doc.id} document={doc} />
-                  ))}
+              {todayDocs.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold mb-4">Today</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {todayDocs.map((doc) => (
+                      <DocumentCard key={doc.id} document={doc} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {earlierDocs.length > 0 && (
-              <div>
-                <h2 className="text-lg font-semibold mb-4">Earlier</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {earlierDocs.map((doc) => (
-                    <DocumentCard key={doc.id} document={doc} />
-                  ))}
+              {earlierDocs.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-4">Earlier</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {earlierDocs.map((doc) => (
+                      <DocumentCard key={doc.id} document={doc} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {filteredDocuments.length === 0 && (
+                          {filteredDocuments.length === 0 && (
               <div className="text-center py-12">
                 <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
                 <p className="text-gray-500 mb-4">Get started by creating your first document</p>
-                <NewDocButton />
+                <div className="flex gap-3 justify-center">
+                  <NewDocButton />
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setActiveView('templates')}
+                    className="flex items-center gap-2"
+                  >
+                    <Layout className="w-4 h-4" />
+                    Browse Templates
+                  </Button>
+                </div>
               </div>
             )}
+            </div>
           </div>
-        </div>
+        ) : (
+          /* Templates Section */
+          <TemplatesDashboard />
+        )}
       </div>
     </div>
   )
