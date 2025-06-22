@@ -140,6 +140,7 @@ export function RichTextEditor({
           const currentAnalysisId = ++analysisId.current // Increment for new analysis
           
           console.log(`🤖 Starting AI analysis #${currentAnalysisId} for new content...`)
+          console.log(`📝 Content: "${currentText.substring(0, 100)}..."`)
           
           setIsGenerating(true)
           setIsTyping(false)
@@ -154,11 +155,20 @@ export function RichTextEditor({
               
               // Update tracking
               lastGeneratedContent.current = currentText
+              
+              // Log the result for debugging
+              if (result.count === 0) {
+                console.log(`📝 No suggestions generated - this may be due to content validation or AI limitations`)
+              }
             } else {
               console.log(`❌ AI analysis #${currentAnalysisId} was cancelled by newer operation`)
             }
           } catch (error) {
-            console.error("Error generating suggestions:", error)
+            console.error(`❌ Error generating suggestions for analysis #${currentAnalysisId}:`, error)
+            // Provide more specific error information
+            if (error instanceof Error) {
+              console.error(`❌ Error details: ${error.message}`)
+            }
           } finally {
             // Only update state if this analysis is still current
             if (currentAnalysisId === analysisId.current) {
@@ -170,6 +180,18 @@ export function RichTextEditor({
           // Just update typing state without generating
           setIsTyping(false)
           onGenerationStateChange?.(false, false)
+          
+          if (currentText.length <= 10) {
+            console.log(`📝 Skipping analysis - content too short (${currentText.length} chars)`)
+          } else if (currentText === lastGeneratedContent.current) {
+            console.log(`📝 Skipping analysis - content unchanged since last generation`)
+          }
+        }
+      } else {
+        if (isGenerating) {
+          console.log(`📝 Skipping analysis - generation already in progress`)
+        } else if (isApplyingSuggestion.current) {
+          console.log(`📝 Skipping analysis - currently applying suggestion`)
         }
       }
     },

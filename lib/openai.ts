@@ -18,6 +18,9 @@ interface OpenAISuggestion {
 
 export async function generateSpellcheckSuggestions(text: string): Promise<Suggestion[]> {
   try {
+    // Add logging for analysis
+    console.log(`🔍 Starting spellcheck analysis for ${text.length} characters`)
+    
     const prompt = `
 You are a professional editor and spellchecker. Analyze the following text and identify:
 
@@ -63,10 +66,13 @@ Only include legitimate issues. If no issues are found, return an empty array []
       ],
       temperature: 0.1,
       max_tokens: 2000,
+    }, {
+      timeout: text.length > 2000 ? 20000 : 15000, // 20s for long text, 15s for shorter
     })
 
     const content = response.choices[0]?.message?.content?.trim()
     if (!content) {
+      console.log("⚠️ Empty response from OpenAI spellcheck")
       return []
     }
 
@@ -83,7 +89,7 @@ Only include legitimate issues. If no issues are found, return an empty array []
       
       openaiSuggestions = JSON.parse(cleanContent)
     } catch (parseError) {
-      console.error("Failed to parse OpenAI response:", parseError)
+      console.error("Failed to parse OpenAI spellcheck response:", parseError)
       console.error("Raw response:", content)
       return []
     }
@@ -109,16 +115,20 @@ Only include legitimate issues. If no issues are found, return an empty array []
       }
     })
 
+    console.log(`✅ Spellcheck generated ${suggestions.length} suggestions`)
     return suggestions
 
   } catch (error) {
-    console.error("Error generating OpenAI suggestions:", error)
+    console.error("❌ Error generating OpenAI spellcheck suggestions:", error)
     return []
   }
 }
 
 export async function generateAdvancedStyleSuggestions(text: string): Promise<Suggestion[]> {
   try {
+    // Add logging for analysis
+    console.log(`✍️ Starting style analysis for ${text.length} characters`)
+    
     const prompt = `
 You are an expert writing coach. Analyze this text for advanced style improvements:
 
@@ -157,10 +167,13 @@ Focus on meaningful improvements that enhance the writing quality. Return JSON a
       ],
       temperature: 0.2,
       max_tokens: 1500,
+    }, {
+      timeout: text.length > 2000 ? 20000 : 15000, // 20s for long text, 15s for shorter
     })
 
     const content = response.choices[0]?.message?.content?.trim()
     if (!content) {
+      console.log("⚠️ Empty response from OpenAI style analysis")
       return []
     }
 
@@ -177,6 +190,7 @@ Focus on meaningful improvements that enhance the writing quality. Return JSON a
       openaiSuggestions = JSON.parse(cleanContent)
     } catch (parseError) {
       console.error("Failed to parse OpenAI style response:", parseError)
+      console.error("Raw response:", content)
       return []
     }
 
@@ -199,10 +213,11 @@ Focus on meaningful improvements that enhance the writing quality. Return JSON a
       }
     })
 
+    console.log(`✅ Style analysis generated ${suggestions.length} suggestions`)
     return suggestions
 
   } catch (error) {
-    console.error("Error generating style suggestions:", error)
+    console.error("❌ Error generating style suggestions:", error)
     return []
   }
 }
@@ -576,4 +591,4 @@ Preserve:
     console.error("Error rewriting text tone:", error)
     return null
   }
-} 
+}
